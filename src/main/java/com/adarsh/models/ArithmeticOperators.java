@@ -6,7 +6,9 @@ public enum ArithmeticOperators {
     ADD('+', 1),
     SUBTRACT('-', 1),
     MULTIPLY('*', 2),
-    DIVIDE('/', 2);
+    DIVIDE('/', 2),
+    OPEN_PARENTHESIS('(', 3),
+    CLOSE_PARENTHESIS('(', 3);
 
     private final Character operator;
     private final int precedence;
@@ -30,6 +32,10 @@ public enum ArithmeticOperators {
     
     public boolean isPrecedenceOf(ArithmeticOperators operator){
          return this.getPrecedence() > operator.getPrecedence();
+    }
+
+    static public ArithmeticOperators fromString(char value) {
+        return Arrays.stream(ArithmeticOperators.values()).filter(operator -> operator.getOperator() == value).findFirst().orElse(null);
     }
     
 }

@@ -12,8 +12,6 @@ public class CalculatorService {
     }
 
     public double evaluate() throws InvalidExpression {
-        if(!expression.isValid())
-            throw new InvalidExpression(AppConstants.Message.INVALID_EXPRESSION);
-        return 0.0;
+        return expression.eval();
     }
 }
