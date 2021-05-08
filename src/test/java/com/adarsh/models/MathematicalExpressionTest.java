@@ -40,10 +40,18 @@ class MathematicalExpressionTest {
     }
 
     @Test
-    void eval_should_handle_the_bracket_rules_for_a_valid_expression() {
-        String expression = "1+2*(3+4)";
+    void eval_should_handle_the_bodmas_rules_for_a_valid_expression() {
+        String expression = "5 / 2 - 3";
         MathematicalExpression mathematicalExpression = new MathematicalExpression(expression);
         Double res = assertDoesNotThrow(mathematicalExpression::eval);
-        assertEquals(15, res);
+        assertEquals(-0.5, res);
+    }
+
+    @Test
+    void eval_should_handle_the_brackets_for_a_valid_expression() {
+        String expression = "5 / (2 - 3)";
+        MathematicalExpression mathematicalExpression = new MathematicalExpression(expression);
+        Double res = assertDoesNotThrow(mathematicalExpression::eval);
+        assertEquals(-5, res);
     }
 }
