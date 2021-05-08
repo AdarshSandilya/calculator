@@ -2,6 +2,8 @@ package com.adarsh.models;
 
 import com.adarsh.AppConstants;
 import com.adarsh.exceptions.InvalidExpression;
+import com.adarsh.stratgies.BinaryOperationStrategy;
+import com.adarsh.stratgies.BinaryOperationStrategyFactory;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -37,63 +39,49 @@ public class MathematicalExpression {
         if (!isValid())
             throw new InvalidExpression(AppConstants.Message.INVALID_EXPRESSION);
         char[] tokens = expression.toCharArray();
-        Stack<Integer> values = new Stack<>();
-        Stack<ArithmeticOperators> operators = new Stack<>();
+        BinaryOperationStrategyFactory strategyFactory = new BinaryOperationStrategyFactory();
+        Stack<Double> values = new Stack<>();
+        Stack<ArithmeticOperator> operators = new Stack<>();
+        boolean isParenthesisOpen = false;
 
         for (int i = 0; i < tokens.length; i++) {
             if (tokens[i] == ' ') continue;
-
             //push digits
             if (Character.isDigit(tokens[i])) {
                 StringBuilder currentDigit = new StringBuilder();
                 while (i < tokens.length && Character.isDigit(tokens[i]))
                     currentDigit.append(tokens[i++]);
 
-                values.push(Integer.parseInt(currentDigit.toString()));
+                values.push(Double.valueOf(currentDigit.toString()));
                 i--;
                 continue;
             }
+            ArithmeticOperator currentOperator = ArithmeticOperator.fromString(tokens[i]);
+            BinaryOperationStrategy strategy;
 
-            ArithmeticOperators currentOperator = ArithmeticOperators.fromString(tokens[i]);
-
-            //push open braces
-            if (currentOperator == ArithmeticOperators.OPEN_PARENTHESIS)
+            if (currentOperator == ArithmeticOperator.OPEN_PARENTHESIS) {
                 operators.push(currentOperator);
-
-                //solve close braces
-            else if (currentOperator == ArithmeticOperators.CLOSE_PARENTHESIS) {
-                while (operators.peek() != ArithmeticOperators.OPEN_PARENTHESIS)
-                    values.push(applyOperation(operators.pop(), values.pop(), values.pop()));
+                isParenthesisOpen = true;
+            } else if (currentOperator == ArithmeticOperator.CLOSE_PARENTHESIS) {
+                while (operators.peek() != ArithmeticOperator.OPEN_PARENTHESIS) {
+                    strategy = strategyFactory.getStrategy(operators.pop());
+                    values.push(strategy.apply(values.pop(), values.pop()));
+                }
                 operators.pop();
-            }
-
-            // Current token is an operator.
-            else if (ArithmeticOperators.isAnOperator(tokens[i])) {
-                while (!operators.empty() && operators.peek().isPrecedenceOf(currentOperator))
-                    values.push(applyOperation(operators.pop(), values.pop(), values.pop()));
-
+                isParenthesisOpen = false;
+            } else if (ArithmeticOperator.isAnOperator(tokens[i])) {
+                while (!operators.empty() && !isParenthesisOpen && operators.peek().isPrecedenceOf(currentOperator)) {
+                    strategy = strategyFactory.getStrategy(operators.pop());
+                    values.push(strategy.apply(values.pop(), values.pop()));
+                }
                 operators.push(currentOperator);
+
             }
         }
-
-        while (!operators.empty())
-            values.push(applyOperation(operators.pop(), values.pop(), values.pop()));
-
-        return values.pop();
-    }
-
-
-    public static int applyOperation(ArithmeticOperators op, int b, int a) {
-        switch (op) {
-            case ADD:
-                return a + b;
-            case SUBTRACT:
-                return a - b;
-            case MULTIPLY:
-                return a * b;
-            case DIVIDE:
-                return a / b;
+        while (!operators.empty()) {
+            BinaryOperationStrategy strategy = strategyFactory.getStrategy(operators.pop());
+            values.push(strategy.apply(values.pop(), values.pop()));
         }
-        return 0;
+        return values.pop();
     }
 }

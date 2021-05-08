@@ -38,4 +38,12 @@ class MathematicalExpressionTest {
         Double res = assertDoesNotThrow(mathematicalExpression::eval);
         assertEquals(10, res);
     }
+
+    @Test
+    void eval_should_handle_the_bracket_rules_for_a_valid_expression() {
+        String expression = "1+2*(3+4)";
+        MathematicalExpression mathematicalExpression = new MathematicalExpression(expression);
+        Double res = assertDoesNotThrow(mathematicalExpression::eval);
+        assertEquals(15, res);
+    }
 }
